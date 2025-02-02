@@ -1,101 +1,125 @@
-import Image from "next/image";
+"use client"
+
+import { useState, useEffect } from "react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [keywords, setKeywords] = useState("")
+  const [article, setArticle] = useState("")
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const { toast } = useToast()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const generateArticle = () => {
+    // Validate input
+    if (!keywords.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter at least one keyword",
+      })
+      return
+    }
+
+    // Check if keywords contain actual words (not just spaces or special characters)
+    const validKeywords = keywords
+      .split(",")
+      .map((word) => word.trim())
+      .filter((word) => /^[a-zA-Z]+$/.test(word))
+
+    if (validKeywords.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter valid keywords (letters only)",
+      })
+      return
+    }
+
+    const loremIpsum =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+
+    const generatedArticle = `Article about ${validKeywords.join(" and ")}:\n\n${loremIpsum}`
+    setArticle(generatedArticle)
+
+    toast({
+      title: "Success!",
+      description: "Your article has been generated",
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      generateArticle()
+    }
+  }
+
+  if (!mounted) return null
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted transition-all duration-300">
+      <div className="absolute right-4 top-4">
+        <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 max-w-3xl">
+        <div className="space-y-8">
+          <div className="space-y-2 text-center">
+            <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">AI Article Generator</h1>
+            <p className="text-muted-foreground">Enter keywords and let AI create an article for you</p>
+          </div>
+
+          <Card className="backdrop-blur-sm bg-card/50">
+            <CardContent className="space-y-4 p-6">
+              <div className="space-y-2">
+                <Label htmlFor="keywords">Keywords</Label>
+                <Input
+                  id="keywords"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="e.g., rich, leverage debt"
+                  className="bg-background/50"
+                />
+                <p className="text-xs text-muted-foreground">Separate multiple keywords with commas</p>
+              </div>
+              <Button
+                onClick={generateArticle}
+                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+              >
+                Generate Article
+              </Button>
+            </CardContent>
+          </Card>
+
+          {article && (
+            <Card className="backdrop-blur-sm bg-card/50">
+              <CardHeader>
+                <CardTitle>Generated Article</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <p className="whitespace-pre-wrap">{article}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
-  );
+  )
 }
+
